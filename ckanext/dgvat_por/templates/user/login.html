@@ -1,0 +1,36 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:xi="http://www.w3.org/2001/XInclude" 
+  py:strip="">
+
+  <py:def function="page_title">Login - User</py:def>
+  <py:def function="page_heading">Login to ${g.site_title}</py:def>
+
+  <div py:match="content"> 
+  <!-- ${c.myresult} -->
+	<py:choose>
+		<py:when test="c.is_allowed_to_switch">
+		    <form action="${c.login_handler}" method="post" class="simple-form" id="login">
+		      <fieldset>
+		        <!--legend i18n:msg="site_title">Login</legend--> 
+		
+		        <label for="login">Login:</label>
+		        <input type="text" name="login" value="" />
+		        <br/>
+		        <label for="password">Password:</label>
+		        <input type="password" name="password" value="" />
+		        <br/>
+		        <label for="remember">Remember me:</label>
+		        <input type="checkbox" name="remember" value="86400" checked="checked" />
+		        <br/>
+		      </fieldset>
+		      <input name="s" id="s" type="submit" class="btn primary" value="Sign In"/>
+		      &mdash;
+		      <a href="${h.url_for(controller='user', action='request_reset')}">Forgot your password?</a>
+		    </form>
+	    </py:when>
+    </py:choose>
+    <br/> 
+  </div>
+  <xi:include href="layout.html" />
+</html>

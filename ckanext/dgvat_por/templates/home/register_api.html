@@ -1,0 +1,54 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip="">
+  
+  <py:def function="page_title">Register API - ${g.site_title}</py:def>
+
+  	<div py:match="content"> 
+  		<h2>API registrieren</h2>
+	<py:if test="c.sent == '1'">
+			Vielen Dank für Ihre Nachricht - wir werden uns in Kürze bei Ihnen melden.<br />
+			Ihr data.gv.at-Betriebsteam<br />
+		</py:if>
+		<py:if test="c.sent != '1'">
+
+			<p>Natürlich können Daten von Ihrer eigenen CKAN-Installation automatisiert übernommen werden. Nachdem auf ${g.site_title} ein sogenannter Harvester eingerichtet worden ist, wird Ihr Server täglich auf neue bzw geänderte Datensätze überprüft und Daten bei Bedarf auf ${g.site_title} übernommen.</p>
+			
+			<p>Vorraussetzung dafür ist, dass Ihre Metadaten den Standard der Cooperation OGD Österreich erfüllen (siehe: <a href="https://www.ref.gv.at/Veroeffentlichte-Informationen.2774.0.html" target="_blank">OGD Metadaten</a>).</p>
+			
+			<p>Bitte füllen Sie das untenstehende Kontaktformular aus!</p>
+			
+			<form id="form" method="post">
+						<label class="description" for="organization">Name der Organisation </label>
+						<div>
+							<input id="organization" name="organization" class="element text medium" type="text" maxlength="255" value="${c.cdo_group.name}"/> 
+						</div> 
+						<label class="description" for="name">Ihr Name </label>
+						<div>
+							<input id="name" name="name" class="element text medium" type="text" maxlength="255" value="${c.userobj.fullname if c.userobj else c.user}"/> 
+						</div> 
+						<label class="description" for="phone">Telefonnummer </label>
+						<div>
+							<input id="phone" name="phone" class="element text medium" type="text" maxlength="255" value=""/> 
+						</div> 
+						<label class="description" for="email">Emailadresse </label>
+						<div>
+							<input id="email" name="email" class="element text medium" type="text" maxlength="255" value="${c.userobj.email if c.userobj else ''}"/> 
+						</div> 
+						<label class="description" for="api">API - Adresse </label>
+						<div>
+							<input id="api" name="api" class="element text medium" type="text" maxlength="255" value="http://"/> 
+						</div>
+						<label class="description" for="comment">Bemerkungen </label>
+						<div>
+							<textarea id="comment" name="comment" class="element text medium" type="text" cols="55" rows="3"></textarea> 
+						</div>
+						<input id="sent" name="sent" type="hidden" value="1" />
+			    		<input id="saveForm" class="button_text" type="submit" name="submit" value="Submit" />
+			</form>	
+		</py:if>
+	</div>
+
+  <xi:include href="layout.html" />
+</html>

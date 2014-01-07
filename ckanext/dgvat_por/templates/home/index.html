@@ -1,0 +1,52 @@
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip="">
+
+  <xi:include href="../facets.html" />
+
+  <py:def function="page_title">Welcome to ${g.site_title}!</py:def>
+  <py:def function="page_heading">
+  	<h1 class="page_heading">Welcome to ${g.site_title}!</h1>
+  	<span class="ckan-logged-in" style="display: none;">
+	      <h3>
+	      	Sch&ouml;n Sie wiederzusehen, ${c.userobj.fullname if c.userobj else c.user}!
+	      </h3>
+    </span>
+  </py:def>
+
+
+
+  <div py:match="content">
+    <xi:include href="search_form.html" />
+    ${field_list()}   
+      <py:if test="c.query_error">
+        <p i18n:msg="item_count"><strong>There was an error while searching.</strong> 
+            Please try again.</p>
+      </py:if>
+      <h4 i18n:msg="item_count"><strong>${c.page.item_count}</strong> datasets found</h4>            
+      <py:if test="c.page.item_count == 0">
+        <p i18n:msg="">Would you like to <a href="${h.url_for(controller='package', action='new', id=None)}">create a new dataset?</a></p>
+      </py:if>
+      ${package_list_from_dict(c.page.items)}
+      ${c.page.pager(q=c.q)}
+  </div>
+
+  <xi:include href="layout.html" />
+  	<script type="text/javascript">
+	  /* <![CDATA[ */
+		$(document).ready(function(){
+		  $("ul.dataset_formats li a:contains('CSV')").addClass('csv');
+		  $("ul.dataset_formats li a:contains('XLS')").addClass('csv');
+		  $("ul.dataset_formats li a:contains('PDF')").addClass('pdf');
+		  $("ul.dataset_formats li a:contains('JSON')").addClass('json');
+		  $("ul.dataset_formats li a:contains('HTML')").addClass('html');
+		  $("ul.datasets > li:nth-child(odd)").addClass('alternate');
+		});
+	  /* ]]>  */
+	</script>
+</html>
+
+

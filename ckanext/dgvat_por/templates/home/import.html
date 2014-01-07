@@ -1,0 +1,83 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip="">
+  
+  <py:def function="page_title">Import - ${g.site_title}</py:def>
+
+  	<div py:match="content"> 
+  		<h2>Datens&auml;tze importieren</h2>
+	<py:if test="c.sent == '1'">
+			Die Datei wurde hochgeladen, der automatische Import startet in K&uuml;rze!
+			
+		</py:if>
+		<py:if test="c.sent != '1'">
+
+			<p>Hier k&ouml;nnen Sie automatisiert Daten per Excel in data.gv.at &uuml;bernehmen. Bitte verwenden Sie f&uuml;r den Import ausschlie&szlig;lich die offizielle Vorlagendatei, die sie unter data@brz.gv.at anfordern k&ouml;nnen.</p>
+			
+			<p>Vorraussetzung daf&uuml;r ist, dass Ihre Metadaten den Standard der Cooperation OGD &Ouml;sterreich erf&uuml;llen (siehe: <a href="https://www.ref.gv.at/Veroeffentlichte-Informationen.2774.0.html" target="_blank">OGD Metadaten</a>).</p>
+			
+			<p>Bereits vorhandene Datens&auml;tze m&uuml;ssen unbedingt in der Datei mit der entsprechenden Metadaten-ID (metadata_identifier) gekennzeichnet werden, ansonsten werden sie noch einmal neu im System angelegt.</p>
+			
+			<p>Bitte w&auml;hlen Sie Ihre Import-Datei aus!</p>
+			
+<form enctype="multipart/form-data" method="post">
+
+Upload file: <input id="file" name="file" type="file" /> <br />
+<input type="hidden" id="sent" name="sent" value="1" />
+<input type="submit" id="submit" name="submit" value="Importieren" />
+</form>
+	
+		</py:if>
+
+       <table id="harvest-source-details" class="table table-bordered table-condensed">
+         <tr>
+            <th>Status</th>
+            <td>
+                <a name="errors"/>Last Harvest Errors: ${c.source.status.last_harvest_statistics.errors}<br/>
+                <py:choose>
+                    <py:when test="len(c.source.status.last_harvest_errors.gather)>0">
+                        <i>Gathering errors</i>
+                        <ul>
+                        <li py:for="error in c.source.status.last_harvest_errors.gather">
+                            <?python
+                                lines = error.split('\n')
+                            ?>
+                            <div py:for="line in lines">${line}</div>
+                        </li>
+                        </ul>
+                    </py:when>
+                </py:choose>
+                <py:choose>
+                    <py:when test="len(c.source.status.last_harvest_errors.object)>0">
+                       <i>Object errors</i>
+                        <ul>
+                        <li py:for="error in c.source.status.last_harvest_errors.object">
+                            <div>GUID <a href="${g.site_url}/harvest/object/${error.object_id}">${error.object_guid}</a></div>
+                            <?python
+                                lines = error['message'].split('\n')
+                            ?>
+                            <div py:for="line in lines">${line}</div>
+                        </li>
+                        </ul>
+                    </py:when>
+                </py:choose>
+
+                Last Harvest Added: ${c.source.status.last_harvest_statistics.added}<br/>
+                Last Harvest Updated: ${c.source.status.last_harvest_statistics.updated}<br/>
+                Last Harvest: ${c.source.status.last_harvest_request} <br/>
+                Next Harvest: ${c.source.status.next_harvest}
+            </td>
+        </tr>
+        <tr>
+            <th>Total Errors</th>
+            <td>${c.source.status.overall_statistics.errors}</td>
+        </tr>
+        <tr>
+            <th>Total Datasets</th>
+            <td>${c.source.status.overall_statistics.added}</td>
+        </tr>
+      </table>
+	</div>
+  <xi:include href="layout.html" />
+</html>

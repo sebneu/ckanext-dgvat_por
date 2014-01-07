@@ -1,0 +1,611 @@
+<form
+  py:with="tab_mode=(c.action=='edit')"
+  class="${'tab-content' if tab_mode else ''} ${'has-errors' if errors else ''} form-horizontal"
+  id="dataset-edit"
+  method="post"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude" >  
+  
+<div class="alert alert-error error-explanation" id="error_div" style="display:none;">
+<?python
+field_map = {'Name':'Url', 'Titel':'Titel', 'Categorization':'Kategorie', 'Notizen':'Beschreibung', 'Tag string': 'Schlagworte', 'Maintainer': 'Datenverantwortliche Stelle', 'License id': 'Lizenz', 'Begin datetime': 'Zeitliche Ausdehnung (Anfang)' }
+?>
+<h2>Errors in form</h2>
+<p>The form contains invalid entries:</p>
+<ul id="error_list">
+	<py:if test="error_summary">
+	  <li py:for="key, error in error_summary.items()">${"%s: %s" % (field_map.get(key) if field_map.get(key) else key, error)}
+	    <py:if test="key=='Resources'">
+	      <ul>
+	        <py:for each="idx, errordict in enumerate(errors.get('resources', []))">
+	          <li py:if="errordict">
+	            Resource ${idx}:
+	            <ul>
+	              <li py:for="thiskey, thiserror in errordict.items()">${thiskey}: <py:for each="errorinfo in thiserror">${errorinfo}; </py:for></li>
+	            </ul>
+	          </li>
+	        </py:for>
+	      </ul>
+	    </py:if>
+	  </li>
+  	</py:if>
+  <script>var global_form_errors = ${h.dump_json(errors)};</script>
+</ul>
+</div>
+<fieldset class="tab-pane fade in active" id="basic-information" >
+    <div class="control-group id-field">
+    <label class="control-label-required" for="id">Eindeutiger Identifikator<em class="star">*</em></label>
+    <div class="controls">
+    <py:choose test="">
+    <py:when test="data.get('metadata_identifier', '')">
+      <input id="metadata_identifier" readonly="readOnly" name="metadata_identifier" type="text" value="${data.get('metadata_identifier', '')}"/>
+     </py:when>
+     <py:otherwise>
+     <input id="id" readonly="readOnly" name="id" type="text" value="${data.get('id', '')}"/>
+     </py:otherwise>
+     </py:choose>
+      <p>Wird automatisch generiert!</p>
+      <p class="metastandard-description">Eindeutiger Identifikator f&uuml;r den Metadatensatz.</p>
+      <p class="field_error" py:if="errors.get('id', '')">${errors.get('id', '')}</p>
+    </div>
+  </div>
+    <div class="control-group title-field">
+    <label class="control-label-required" for="title">Titel<em class="star">*</em></label>
+    <div class="controls">
+      <input id="title"
+        class="js-title"
+        name="title" type="text"
+        value="${data.get('title', '')}"
+        placeholder="${_('A short descriptive title for the dataset')}"
+      />
+      <p class="metastandard-description">Titel des beschriebenen Metadatensatzes</p>
+      <p class="metastandard-example">z.B. Schulstandorte, Pendlerstatistik Linz 2010</p>
+      <p class="field_error" py:if="errors.get('title', '')">${errors.get('title', '')}</p>
+    </div>
+  </div>
+    <div class="control-group name-field">
+    <label class="control-label-required" for="name">Url<em class="star">*</em></label>
+    <div class="controls">
+      <div class="input-prepend">
+        <span class="add-on">${h.url(controller='package', action='search')+'/'}</span>
+        <input maxlength="100" name="name" type="text" class="js-url-input" value="${data.get('name', '')}" />
+      </div>
+      <p class="js-url-is-valid">&nbsp;</p>
+      <p class="url-is-long">Warnung: Die angebene URL ist sehr lang. Ziehen Sie in Betracht diese etwas zu k&uuml;rzen.</p>
+      <p class="metastandard-description">Geben Sie bitte mindestens 2 Zeichen ein</p>
+      <p class="field_error" py:if="errors.get('name', '')">${errors.get('name', '')}</p>
+    </div>
+  </div>
+    <div class="control-group metadata_created-field">
+    <label class="control-label-required" for="metadata_created">Datum des Metadatensatzes<em class="star">*</em></label>
+    <div class="controls">
+      <input id="metadata_modified" readonly="readOnly" name="metadata_modified" type="text" value="${data.get('metadata_modified', '')}"/>
+      <p>Wird bei Neuanlage/&Auml;nderung eines Datensatzes automatisch generiert!</p>
+      <p class="metastandard-description">Datum, an dem der Metadatensatz erzeugt bzw. aktualisiert wurde.</p>
+      <p class="field_error" py:if="errors.get('metadata_modified', '')">${errors.get('id', '')}</p>
+    </div>
+  </div>
+  <!-- <div class="control-group metadata_modified-field">
+    <label class="control-label-required" for="metadata_modified">&Auml;nderungsdatum<em class="star">*</em></label>
+    <div class="controls">
+      <input id="metadata_modified" readonly="readOnly" name="metadata_modified" type="text" value="${data.get('metadata_modified', '')}"/>
+      <p>Wird automatisch generiert!</p>
+      <p class="metastandard-description">Datum der letzten Aktualisierung der Ressource.</p>
+      <p class="field_error" py:if="errors.get('metadata_modified', '')">${errors.get('metadata_modified', '')}</p>
+    </div>
+  </div> -->
+<script type="text/javascript">
+    //format date for field metadata_modified
+    window.onload = function () {
+        var cur = document.getElementById('metadata_modified').value.split('.');
+        if(parseInt(cur.length)==2) {
+            document.getElementById('metadata_modified').value = parseDate(cur[0]);
+        }
+        /* 	var cur1 = document.getElementById('metadata_created').value.split('.');
+            if(parseInt(cur1.length)==2) {
+                document.getElementById('metadata_created').value = parseDate(cur1[0]);
+            } */
+    }
+  
+    function parseDate(dateStr) {
+        //dateStr="2012-09-19T14:37:16"; 
+        //2012-10-03 08:45:15
+        var splitChar = "T";
+        if(dateStr.indexOf(splitChar) ==-1) {
+            splitChar=" ";
+        }
+        if(dateStr.indexOf(splitChar)!=-1) {
+            var dateTime = dateStr.split(splitChar);
+            var d=dateTime[0].split("-");
+            var t=dateTime[1].split(":");
+            var date = new Date(d[0],(d[1]-1),d[2],t[0],t[1],t[2]);
+            //return d[2] +"." +d[1]+"." + d[0] + " " + t[0] + ":" +t[1];
+            return dateTime[0];
+        }
+        return dateStr;
+
+    } 
+</script>
+
+  <div class="control-group description-field">
+    <label class="control-label-required" for="notes">Beschreibung<em class="star">*</em></label>
+    <div class="controls">
+      <div class="markdown-editor">
+        <ul class="button-row">
+          <li><button class="btn js-markdown-edit depressed">Edit</button></li>
+          <li><button class="btn js-markdown-preview">Preview</button></li>
+        </ul>
+        <textarea class="markdown-input" name="notes" id="notes" placeholder="Geben Sie hier eine Beschreibung ein ...">${data.get('notes','')}</textarea>
+        <div class="markdown-preview" style="display: none;"></div>
+        <span class="hints">Sie k&ouml;nnen hier <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown Formatierung</a> verwenden.</span>
+      </div>
+      <p class="metastandard-description">Inhaltliche Beschreibung des Datensatzes bzw. Dienstes.</p>
+      <p class="metastandard-example">z.B. Hauptwohnsitzbev&ouml;lkerung der Stadt Linz f&uuml;r das Jahr 2010 gruppiert nach Geschlecht, Alter etc..</p>
+      <p class="field_error" py:if="errors.get('notes', '')">${errors.get('notes', '')}</p>
+    </div>
+  </div>
+   <div class="control-group categorization-field">
+    <label class="control-label-required" for="categorization">Kategorie<em class="star">*</em></label>
+    <div class="controls">
+      <select id="categorization" name="categorization" size="14" multiple="multiple">
+        <py:for each="cat_desc, id in c.categorization">
+		  <option value="${id}" py:attrs="{'selected': 'selected' if id in data.get('categorization','') else None}">${cat_desc}</option>
+        </py:for>
+      </select>
+      <p class="metastandard-description">Kategorisierung des Datensatzes/Dienstes (Mehrfachzuordnungen durch Dr&uuml;cken der Strg-Taste sind m&ouml;glich).</p>
+      <p class="metastandard-example">z.B. Gesundheit </p>
+      <p class="field_error" py:if="errors.get('categorization', '')">${errors.get('categorization', '')}</p>
+    </div>
+  </div> 
+  <div class="control-group tags-field">
+    <label class="control-label-required">Schlagworte<em class="star">*</em></label>
+    <div class="controls">
+      <input class="long autocomplete-tag" id="tag_string" name="tag_string" size="60" type="text"
+               value="${data.get('tag_string') or ', '.join([tag['name'] for tag in data.get('tags', []) if not tag.get('vocabulary_id')])}" />
+      <p class="metastandard-description">Beschlagwortung des Datensatzes bzw. Dienstes (mehrere Schlagworte bitte durch Beistrich trennen).</p> 
+      <p class="metastandard-example">z.B. Verkehr, Fahrrad, Roller</p>
+      <p class="field_error" py:if="errors.get('tag_string', '')">${errors.get('tag_string', '')}</p>
+    </div>
+  </div>
+   <div class="control-group maintainer">
+    <label class="control-label-required field_opt" for="maintainer">Datenverantwortliche Stelle<em class="star">*</em></label>
+    <div class="controls">
+      <input id="maintainer" name="maintainer" type="text" value="${data.get('maintainer', '')}" />
+      <p class="metastandard-description">Bezeichnung bzw. Name der f&uuml;r den Datensatzes oder Dienst zust&auml;ndigen Organisation bzw. Person.</p>
+      <p class="metastandard-example">z.B. Magistrat Wien - Magistratsabteilung 33 - Wien Leuchtet </p>
+      <p class="field_error" py:if="errors.get('maintainer', '')">${errors.get('maintainer', '')}</p>
+    </div>
+  </div>
+ <div class="control-group maintainer_link">
+    <label class="control-label-required field_opt" for="maintainer_link">Kontaktseite der datenverantwortlichen Stelle</label>
+    <div class="controls">
+      <input id="maintainer_link" name="maintainer_link" type="text" value="${data.get('maintainer_link', '')}" />
+      <p class="metastandard-description">URL zur daten- bzw. dienstverantwortlichen Stelle.</p>
+      <p class="metastandard-example">z.B. http://www.wien.gv.at/freizeit/bildungjugend/ </p>
+      <p class="field_error" py:if="errors.get('maintainer_link', '')">${errors.get('maintainer_link', '')}</p>
+    </div>
+  </div>
+  <div class="control-group license-field">
+    <label class="control-label-required" for="license_id">License<em class="star">*</em></label>
+    <div class="controls">
+      <select id="license_id" name="license_id">
+        <py:for each="licence_desc, licence_id in c.licences">
+          <option value="${licence_id}" py:attrs="{'selected': 'selected' if data.get('license_id', 'cc-by') == licence_id else None}" >${licence_desc}</option>
+        </py:for>
+      </select>
+      <p class="metastandard-description">Angabe der Lizenzform f&uuml;r den Datensatz oder den bereitgestellten Dienst. Bei OGD Daten bezieht sich dies auf Creative Commons "Namensnennung 3.0 &Ouml;sterreich (CC BY 3.0) ".</p>
+      <p class="metastandard-example">Namensnennung 3.0 &Ouml;sterreich (CC BY 3.0) </p>
+      <p class="field_error" py:if="errors.get('license_id', '')">${errors.get('license_id', '')}</p>
+    </div>
+  </div>
+  <div class="control-group begin-field">
+    <label class="control-label-required" for="begin_datetime">Zeitliche Ausdehnung (Anfang)<em class="star">*</em></label>
+    <div class="controls">
+      <input id="begin_datetime" name="begin_datetime" type="text" value="${data.get('begin_datetime', '')}" />
+      <p class="metastandard-description">Beginn der G&uuml;ltigkeit eines Datensatzes oder Dienstes. Format: YYYY-MM-DDThh:mm:ss</p>
+      <p class="metastandard-example">z.B. 2008-12-23T22:30:12 </p>
+      <p class="field_error" py:if="errors.get('begin_datetime', '')">${errors.get('begin_datetime', '')}</p>
+    </div>
+  </div>
+    <div class="control-group end-field">
+    <label class="control-label" for="end_datetime">Zeitliche Ausdehnung (Ende)</label>
+    <div class="controls">
+      <input id="end_datetime" name="end_datetime" type="text" value="${data.get('end_datetime', '')}" />
+      <p class="metastandard-description">Ende der G&uuml;ltigkeit eines Datensatzes oder Dienstes. Format: YYYY-MM-DDThh:mm:ss</p>
+      <p class="metastandard-example">z.B. 2009-11-23T20:36:00</p>
+      <p class="field_error" py:if="errors.get('end_datetime', '')">${errors.get('end_datetime', '')}</p>
+    </div>
+  </div>
+  <div class="control-group mandatory">
+  	<em class="star">*</em> Pflichtfeld
+  </div>
+</fieldset>
+
+<fieldset class="tab-pane" id="resources">
+  <legend>Datensatz oder Dienst hinzuf&uuml;gen</legend>
+  <div class="instructions">
+    <p>Verlinken Sie bitte entweder auf bestehende Dateien auf Ihrer eigenen Webseite, f&uuml;gen Sie einen Link zu einer API Ihres Dienstes hinzu oder laden Sie alternativ Ihre Datenfiles auf data.gv.at hoch.</p>
+  </div>
+  <div class="row">
+    <div class="span4">
+      <ul class="resource-list resource-list-edit drag-drop-list">
+      </ul>
+      <ul class="resource-list resource-list-add">
+        <li><a href="#" class="js-resource-add">${h.icon('page_white_add')}Neuer Datensatz oder Dienst</a></li>
+      </ul>
+    </div>
+    <div class="span8">
+      <div style="display: none;" class="resource-panel">
+        <button class="btn btn-danger resource-panel-close">x</button>
+        <div class="resource-details resource-add">
+          <ul class="nav nav-tabs">
+            <li><a data-toggle="tab" href="#link-file">Datei verlinken</a></li>
+            <li><a data-toggle="tab" href="#link-api">Link zu einer API</a></li>
+            <li><a data-toggle="tab" href="#upload-file">Datei hinzuf&uuml;gen</a></li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane" id="link-file">
+              <div class="form-inline js-add-url-form">
+                <label class="field_opt" for="url">File URL</label>
+                <input name="add-resource-url" type="text" class="input-small" placeholder="http://mydataset.com/file.csv"/>
+                <input name="add-resource-save" type="submit" class="btn btn-primary" value="Add" />
+              </div>
+            </div>
+            <div class="tab-pane" id="link-api">
+              <div class="form-inline js-add-api-form">
+                <label class="field_opt" for="url">API URL</label>
+                <input name="add-resource-url" type="text" class="input-small" placeholder="http://mydataset.com/api/"/>
+                <input name="add-resource-save" type="submit" class="btn btn-primary" value="Add" />
+              </div>
+            </div>
+            <div class="tab-pane" id="upload-file">
+              <div class="js-add-upload-form">
+              </div>
+              <div class="alert alert-block" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="js-resource-edit-barebones">
+    <!-- The resource editor deletes these fields and replaces them with a dynamic editor.
+         They are required for the form to render correctly when not in resource-edit mode. -->
+    <py:for each="num,res in enumerate(data.get('resources', []))">
+      <py:for each="field in res.keys()">
+      <input type="hidden" name="resources__${res.get('position')}__${field}" value="${res.get(field)}" />
+      </py:for>
+    </py:for>
+  </div>
+</fieldset>
+
+<fieldset class="tab-pane fade" id='further-information'>
+<div class="control-group">
+    <label class="control-label field_opt" for="schema_name">Bezeichnung der Metadatenstruktur</label>
+    <div class="controls">
+      <input id="schema_name" name="schema_name" type="text" value="${data.get('schema_name', 'OGD Austria Metadata 2.1')}" />
+      <p class="metastandard-description">Name der Metadatenstruktur</p>
+      <p class="metastandard-example">z.B. OGD Austria Metadata 2.1</p>      
+      <p class="field_error" py:if="errors.get('schema_name', '')">${errors.get('schema_name', '')}</p>
+    </div>
+ </div>
+ <div class="control-group">
+    <label class="control-label field_opt" for="schema_language">Sprache des Metadatensatzes</label>
+    <div class="controls">
+      <input id="schema_language" name="schema_language" type="text" value="${data.get('schema_language', 'ger')}" />
+      <p class="metastandard-description">Sprache in welcher der Metadatensatz erstellt wurde.</p>
+      <p class="metastandard-example">z.B. ger</p>      
+      <p class="field_error" py:if="errors.get('schema_language', '')">${errors.get('schema_language', '')}</p>
+    </div>
+ </div>
+  <div class="control-group">
+    <label class="control-label field_opt" for="schema_characterset">Character Set Code des Metadatensatzes</label>
+    <div class="controls">
+      <input id="schema_characterset" name="schema_characterset" type="text" value="${data.get('schema_characterset', 'utf8')}" />
+      <p class="metastandard-description">F&uuml;r eine europ&auml;ische Integration wird dieses Metadatenelement zwingend gebraucht, da eine Zusammenf&uuml;hrung sonst nicht m&ouml;glich ist.</p>
+      <p class="metastandard-example">z.B. utf8 </p>      
+      <p class="field_error" py:if="errors.get('schema_characterset', '')">${errors.get('schema_characterset', '')}</p>
+    </div>
+ </div>
+   <div class="control-group">
+    <label class="control-label field_opt" for="metadata_linkage">Weiterf&uuml;hrende Metadaten</label>
+    <div class="controls">
+      <input id="metadata_linkage" name="metadata_linkage" type="text" value="${data.get('metadata_linkage', '')}" />
+      <p class="metastandard-description">URL zu erweiterten Metadaten des Datensatzes/Dienstes.</p>
+      <p class="metastandard-example">z.B. http://data.wien.gv.at/katalog/wc-anlagen.html </p>
+      <p class="field_error" py:if="errors.get('metadata_linkage', '')">${errors.get('metadata_linkage', '')}</p>
+    </div>
+ </div>
+  <div class="control-group">
+    <label class="control-label field_opt" for="attribute_description">Attributbeschreibung</label>
+    <div class="controls">
+      <div class="markdown-editor">
+        <ul class="button-row">
+          <li><button class="btn js-markdown-edit depressed">Edit</button></li>
+          <li><button class="btn js-markdown-preview">Preview</button></li>
+        </ul>
+        <textarea class="markdown-input" name="attribute_description" id="attribute_description">${data.get('attribute_description','')}</textarea>
+        <div class="markdown-preview" style="display: none;"></div>
+        <span class="hints">Sie k&ouml;nnen hier <a href="http://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown Formatierung</a> verwenden.</span>
+      </div>    
+    <p class="metastandard-description">Menschenlesbare Beschreibung der Bedeutung der Datenfelder in einem Datensatz.</p>
+    <p class="metastandard-example">z.B. ADRESSE: Adresse (Stra&szlig;enname, Orientierungsnummer); OEFFNUNGSZEITEN1-6: &Ouml;ffnungszeiten; TELEFON: Telefonnummer, DISTRICT&#95;CODE: Gemeindebezirkskennzahl, ACCOUNTS&#95;TRANSFER: Laufende Transferzahlungen </p>
+    <p class="field_error" py:if="errors.get('attribute_description', '')">${errors.get('attribute_description', '')}</p>
+    </div>
+ </div>
+ <!-- <div class="control-group">
+    <label class="control-label field_opt" for="date_released">Ver&ouml;ffentlichungsdatum</label>
+    <div class="controls">
+      <input id="date_released" name="date_released" type="text" value="${data.get('date_released', '')}" />
+      <p class="metastandard-description">Zeitpunkt der Ver&ouml;ffentlichung der Daten (z.B. das Datum, an dem der Datensatz/Dienst auf der Website der Beh&ouml;rde verf&uuml;gbar gemacht wurde). <br />Format: JJJJ-MM-DD</p>
+      <p class="metastandard-example">z.B. 2011-03-21 </p>
+    </div>
+ </div>
+  <div class="control-group">
+    <label class="control-label field_opt" for="date_updated">&Auml;nderungsdatum</label>
+    <div class="controls">
+      <input id="date_updated" name="date_updated" type="text" value="${data.get('date_updated', '')}" />
+      <p class="metastandard-description">Letztes Aktualisierungsdatum des Datensatzes oder Dienstes.</p>
+      <p class="metastandard-example">Format: JJJJ-MM-DD z.B. 2012-01-15 </p>
+    </div>
+ </div> -->
+ <div class="control-group" style="display:none;">
+    <label class="control-label field_opt" for="publisher">Ver&ouml;ffentlichende Stelle</label>
+    <div class="controls">
+      <input id="publisher" name="publisher" type="text" value="${data.get('publisher', '')}" />
+      <p class="metastandard-description">Bezeichnung bzw. Name der f&uuml;r den Datensatz oder Dienst zust&auml;ndigen Organisation bzw. Person.</p>
+      <p class="metastandard-example">z.B. Magistrat Wien - Abteilung 53 - Presse- und Informationsdienst</p>
+      <p class="field_error" py:if="errors.get('publisher', '')">${errors.get('publisher', '')}</p>
+    </div>
+ </div>
+ <div class="control-group">
+    <label class="control-label field_opt" for="geographic_toponym">Geographische Abdeckung/Lage</label>
+    <div class="controls">
+      <input id="geographic_toponym" name="geographic_toponym" type="text" value="${data.get('geographic_toponym', '')}" />
+      <p class="metastandard-description">Geographische Ortsidentifikation eines Datensatzes oder Dienstes</p>
+      <p class="metastandard-example">z.B. Linz </p>
+      <p class="field_error" py:if="errors.get('geographic_toponym', '')">${errors.get('geographic_toponym', '')}</p>
+    </div>
+ </div>
+  <div class="control-group">
+    <label class="control-label field_opt" for="geographic_bbox">Geographische Ausdehnung</label>
+    <div class="controls">
+      <input id="geographic_bbox" name="geographic_bbox" type="text" value="${data.get('geographic_bbox', '')}" />
+      <p class="metastandard-description">Beschreibung der r&auml;umlichen Ausdehnung eines Datensatzes mit einem umschreibenden Rechteck. Die Angabe erfolgt im Koordinatensystem EPSG:4326 (WGS84) mit einer Mindestgenauigkeit von zwei Dezimalstellen in einer "Well Known Text String" Repr&auml;sentation. POLYGON (Rechtswert_min Hochwert_min, Rechtswert_max Hochwert_max).</p>
+      <p class="metastandard-example">z.B. POLYGON (-180.00 -90.00, 180.00 90.00) </p>
+      <p class="field_error" py:if="errors.get('geographic_bbox', '')">${errors.get('geographic_bbox', '')}</p>
+    </div>
+ </div>
+   <div class="control-group">
+    <label class="control-label-required" for="update_frequency">Aktualisierungszyklus</label>
+    <div class="controls">
+      <select class="short" id="update_frequency" name="update_frequency">
+        <py:for each="freq_name, freq_desc in c.update_frequency">
+          <option value="${freq_name}" py:attrs="{'selected': 'selected' if data.get('update_frequency', '') == freq_name else None}" >
+            ${freq_desc}
+          </option>
+        </py:for>
+      </select>
+      <p class="metastandard-description">Frequenz der Aktualisierung des Datensatzes bzw. Dienstes.</p>
+      <p class="metastandard-example"> z.B. monatlich, j&auml;hrlich </p>
+      <p class="field_error" py:if="errors.get('update_frequency', '')">${errors.get('update_frequency', '')}</p>
+    </div>
+  </div>
+ <div class="control-group">
+    <label class="control-label field_opt" for="lineage_quality">Datenqualit&auml;t/Herkunft</label>
+    <div class="controls">
+      <textarea class="markdown-input" name="lineage_quality" id="lineage_quality">${data.get('lineage_quality','')}</textarea>
+      <p class="metastandard-description">Allgemeine Angaben zur Qualit&auml;t und/oder Entstehungsgenese des Datensatzes oder Dienstes.</p>
+      <p class="metastandard-example"> z.B. Der Datensatz wurde basierend auf der &Ouml;K50, Stand 2011 digitalisiert. Es wurden alle Waldbest&auml;nde f&uuml;r die Gemeinde Kopfing erfasst.</p>
+      <p class="field_error" py:if="errors.get('lineage_quality', '')">${errors.get('lineage_quality', '')}</p>
+    </div>
+ </div>
+ <div class="control-group">
+    <label class="control-label field_opt" for="en_title_and_desc">Titel und Beschreibung Englisch</label>
+    <div class="controls">
+      <input id="en_title_and_desc" name="en_title_and_desc" type="text" value="${data.get('en_title_and_desc', '')}" />
+      <p class="metastandard-description">Titel des Datensatzes oder Dienstes und kurze inhaltliche Beschreibung des Datensatzes bzw. Dienstes f&uuml;r BenutzerInnen in Englisch.</p>
+      <p class="metastandard-example">z.B. Population of Vienna 2010. Contains the population of permanent residents of Vienna and it&apos;s districts as a moving average in the census period 1st January 2010 to 31st December 2012 </p>
+      <p class="field_error" py:if="errors.get('en_title_and_desc', '')">${errors.get('en_title_and_desc', '')}</p>
+    </div>
+ </div>
+  <div class="control-group">
+    <label class="control-label field_opt" for="license_citation">Lizenz Zitat</label>
+    <div class="controls">
+      <input id="en_title_and_desc" name="license_citation" type="text" value="${data.get('license_citation', '')}" />
+      <p class="metastandard-description">Dient dazu, um bei der automatisierten Wiederverwendung von Daten aus einer oder mehreren Datenquellen die richtige Zitierung zu erleichtern.</p>
+      <p class="metastandard-example">z.B. Datenquelle: CC-BY-3.0: Stadt Linz - data.linz.gv.at</p>
+      <p class="field_error" py:if="errors.get('license_citation', '')">${errors.get('license_citation', '')}</p>
+    </div>
+ </div>
+   <div class="control-group homepage-field" style="display:none;">
+    <label class="control-label" for="url">Datenquelle</label>
+    <div class="controls">
+      <input id="url" name="url" type="text" value="${data.get('url', '')}"/>
+      <p class="metastandard-description">The URL for the web page describing the data (not the data itself).</p>
+      <p class="metastandard-example">z.B. Datenquelle: Stadt Wien - data.wien.gv.at</p>
+      <p class="field_error" py:if="errors.get('url', '')">${errors.get('url', '')}</p>
+    </div>
+  </div>
+<div class="control-group groups-field">
+<label class="control-label">Ver&ouml;ffentlichende Stelle</label>
+<div class="controls">
+<?python
+organization = data.get('groups', {})
+if organization:
+    organization = organization[0]
+?>
+        <py:if test="c.groups_available and ((not 'name' in organization) or c.is_sysadmin or c.auth_for_change_state)">
+          <select id="groups__0__id" name="groups__0__id" class="chzn-select">
+            <!--<option value="">(None)</option>//-->
+            <py:for each="group in c.groups_available">
+            <option value="${group['id']}" py:attrs="{'selected':'selected'} if organization and organization.get('id','') == group['id'] else {}">${group['title']}</option>
+            </py:for>
+          </select>
+
+          <label for='cap_public'>
+          <input id='cap_public' type='radio' name='groups__0__capacity' value='public' py:attrs="{'checked':'checked'} if organization and organization.get('capacity','') in ['public', ''] else {}"/>
+          Public</label>
+
+          <label for='cap_private'>
+          <input id='cap_private' type='radio' name='groups__0__capacity' value='private' py:attrs="{'checked':'checked'} if organization and organization.get('capacity','') == 'private' else {}"/>
+          Private</label>
+         </py:if>
+        <py:if test="not (c.is_sysadmin or c.auth_for_change_state)">
+            <span>${organization.get('title', '')}</span>
+         </py:if>
+        <em py:if="not c.groups_available">Cannot add any organizations.</em>
+    </div>
+</div>
+  <div class="control-group" style="display:none">
+    <label class="control-label field_opt" for="author">Author</label>
+    <div class="controls">
+      <input id="author" name="author" type="text" value="${data.get('author', '')}" />
+      <p>The name of the main contact, for enquiries about this particular dataset, using the e-mail address in the following field.</p>
+    </div>
+  </div>
+ 
+  <div class="control-group" style="display:none">
+    <label class="control-label field_opt" for="author_email">Author email</label>
+    <div class="controls">
+      <input id="author_email" name="author_email" type="text" value="${data.get('author_email', '')}" />
+    </div>
+  </div>
+  <div class="control-group" style="display:none">
+    <label class="control-label field_opt" for="maintainer_email">Maintainer email</label>
+    <div class="controls">
+      <input id="maintainer_email" name="maintainer_email" type="text" value="${data.get('maintainer_email', '')}" />
+    </div>
+  </div>
+  <div class="control-group" style="display:none">
+    <label class="control-label field_opt" for="version">Version</label>
+    <div class="controls">
+      <input id="version" maxlength="100" name="version" type="text" value="${data.get('version', '')}" />
+      <p>A number representing the version (if applicable)</p>
+      <p class="metastandard-example">e.g. 1.2.0</p>
+    </div>
+  </div>
+  -
+</fieldset>
+
+<fieldset class="tab-pane fade" id='extras'>
+  <p>Adding custom fields to the dataset such as "location:uk" can help users find it in the search engine. This data will also appear under <strong>Additional Information</strong> when viewing the dataset.</p>
+  <py:with vars="extras = data.get('extras', [])">
+    <py:for each="num, extra in enumerate(extras)">
+      <div class="control-group">
+        <label class="control-label" for="extras__${num}__value">${extra.get('key')}</label>
+        <div class="controls">
+          <input id="extras__${num}__key" name="extras__${num}__key" type="hidden" value="${extra.get('key')}" />
+          <input id="extras__${num}__value" name="extras__${num}__value" type="text" value="${extra.get('value')}" />
+          <label class="checkbox" style="display: inline-block;">
+            <input type="checkbox" name="extras__${num}__deleted" checked="${extra.get('deleted')}" />Delete
+          </label>
+        </div>
+      </div>
+    </py:for>
+    <hr py:if="len(extras)" class="extras-divider" />
+    <py:for each="num in range(len(extras), len(extras) + 4)">
+      <div class="control-group">
+        <label class="control-label" for="extras__${num}__key">Add...</label>
+        <div class="controls">
+          <label>
+            <span class="extras-label">Key =</span>
+            <input class="medium-width" id="extras__${num}__key" name="extras__${num}__key" type="text" />
+          </label>
+          <label>
+            <span class="extras-label">Value =</span>
+            <input class="medium-width" id="extras__${num}__value" name="extras__${num}__value" type="text" />
+          </label>
+        </div>
+      </div>
+    </py:for>
+  </py:with>
+</fieldset>
+
+    <fieldset id='delete' class="tab-pane fade" py:if="c.is_sysadmin or c.auth_for_change_state">
+        <dl>
+            <dt>Delete</dt>
+            <dd>
+                <p>Do you really want to change the state of this dataset? &nbsp;&nbsp;
+                    <button class="dataset-delete btn">Yes!</button></p>
+                <span>Dieser Metadatensatz ist &nbsp;&nbsp;
+                  <select id="state" class="dataset-delete" name="state" style="display: inline;">
+                      <option py:attrs="{'selected': 'selected' if data.get('state') == 'active' else None}" value="active">active</option>
+                      <option py:attrs="{'selected': 'selected' if data.get('state') == 'prepared' else None}" value="prepared">vorbereitet</option>
+                      <option py:attrs="{'selected': 'selected' if data.get('state') == 'deleted' else None}" value="deleted">deleted</option>
+                  </select>
+                    <p>
+                        <div class="control-group">
+                            <label class="control-label field_opt" for="date_released">Ver&ouml;ffentlichungsdatum</label>
+                            <div class="controls">
+                                <input id="publishing_date" name="publishing_date" type="text" value="${data.get('publishing_date', '')}" />
+                                <p class="metastandard-description">Zeitpunkt an dem der Datensatz automatisch ver&ouml;ffentlicht wird<br />
+                                    Format: JJJJ-MM-DD</p>
+                                <p class="metastandard-example">z.B. 2011-03-21 </p>
+                            </div>
+                        </div>
+                    </p>
+                </span>
+            </dd>
+        </dl>
+    </fieldset>
+
+<fieldset id='summary' style="display:none">
+  <div class="control-group">
+    <label class="control-label" for="log_message">&Auml;nderungskommentar</label>
+    <div class="controls">
+      <p>Briefly describe the changes you have made...</p>
+      <textarea id="log_message" name="log_message">${data.get('log_message', h.auto_log_message(c))}</textarea>
+    </div>
+  </div>
+</fieldset>
+
+<!-- <div class="author-box ckan-logged-in" style="display: none;">
+  <p>Author: ${c.author}</p>
+</div>
+<div class="author-box ckan-logged-out">
+  <label>Author: ${c.author}</label>
+  <p i18n:msg="" class="hints">
+    Since you have not signed in this will just be your IP address.
+    <a href="${h.url_for(controller='user', action='login', id=None)}" target="_blank">Click here to sign in</a> before saving (opens in new window).
+  </p>
+</div>  -->
+<script>
+    function getElementsByClassName(className, tag, elm){
+        var testClass = new RegExp("(^|\\s)" + className + "(\\s|$)");
+        var tag = tag || "*";
+        var elm = elm || document;
+        var elements = elm.getElementsByTagName(tag);
+
+        var returnElements = [];
+        var current;
+        var length = elements.length;
+        for (var i in elements) {
+            current = elements[i];
+            if(testClass.test(current.className)) {
+                returnElements.push(current);
+            }
+        }
+        return returnElements;
+    }
+
+
+
+</script>
+
+
+<div class="form-actions">
+  <input id="save" class="btn btn-primary" onClick="return openSummary();" name="save" type="submit" value="${_('Save Changes')} " />
+  <py:if test="c.pkg">
+    <input id="cancel" class="btn href-action" name="cancel" type="reset" value="${_('Cancel')}" action="${h.url_for(controller='package', action='read', id=c.pkg.name)}" />
+  </py:if>
+  <!-- <p> i18n:msg="" class="hints">
+  <strong>Important:</strong> By submitting content, you agree to release your contributions under the <a href="http://opendatacommons.org/licenses/odbl/1.0/">Open Database License</a>. Please <strong>refrain</strong> from editing this page if you are <strong>not</strong> happy to do this.
+  </p-->
+  <div class="clearfix"></div>
+</div>
+
+
+</form>

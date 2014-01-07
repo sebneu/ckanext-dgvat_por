@@ -1,0 +1,79 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  py:strip=""
+  >
+  <xi:include href="../_util.html" />
+  
+  
+<?python
+def get_extrafield(key):
+	val = False
+	for i, (k, v) in enumerate(c.pkg_extras):
+		if k == key:
+			return v
+	return val
+?>
+	<div id="dataset" class="dataset">
+		<div class="contentText clearfix">
+			<div class="notes" py:if="str(c.pkg_notes_formatted).strip()">
+				<div id="notes-extract">
+					${c.pkg_notes_formatted}
+				</div>
+				<div id="notes-remainder"></div>
+				<div id="notes-toggle" style="display: none;">
+					<button class="more btn"><img src="${h.url_for_static('/images/chevron-down.png')}"/></button>
+					<button class="less btn" style="display: none;"><img src="${h.url_for_static('/images/chevron-up.png')}"/></button>
+				</div>
+			</div>
+			
+			<!-- Resources -->
+			<div id="dataset-resources" class="resources subsection">
+				<h3>
+					Datensatz oder Dienst
+					<py:if test="h.check_access('package_update',{'id':c.pkg.id})"> &nbsp;
+					  ${h.subnav_link(_('(Bearbeiten)'), controller='package', action='editresources', id=c.pkg.name)}
+					</py:if>
+				</h3>
+				<ul class="resource-list">
+					<py:for each="res in c.pkg_dict.get('resources', [])">
+				  		<li>
+				    		<a href="${h.url_for(controller='package', action='resource_read', id=c.pkg_dict['name'], resource_id=res['id'])}">
+				      			${h.resource_icon(res)}
+				      			${h.resource_display_name(res)}
+				      			<span py:if="res.get('format')" class="format-box" property="dc:format">${res.get('format')}</span>
+				    		</a>
+				    	</li>
+					</py:for>
+				</ul>
+			  	<py:if test="not len(c.pkg_dict.get('resources', []))">
+			  	(none)
+			  	</py:if>
+			</div>			
+			<h3>Metadatenfelder
+      			<py:if test="h.check_access('package_update',{'id':c.pkg.id})">
+      				&nbsp;${h.subnav_link(_('(Bearbeiten)'), controller='package', action='edit', id=c.pkg.name)}
+      			</py:if>
+      		</h3>
+          	<table border="0" cellpadding="0" cellspacing="0" class="metadata" summary="Auflistung der Metadaten des Datensatzes">
+				<tr class="d2"><td class="dataset-label">Eindeutiger Identifikator&nbsp;<img alt="Eindeutiger Identifier f&uuml;r den Datensatz." title="Eindeutiger Identifier f&uuml;r den Datensatz." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td> <td class="dataset-details"> ${get_extrafield('metadata_identifier') if get_extrafield('metadata_identifier') else c.pkg.id}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Datum des Metadatensatzes&nbsp;<img alt="Datum, an dem der Metadatensatz erzeugt bzw. aktualisiert wurde." title="Datum, an dem der Metadatensatz erzeugt bzw. aktualisiert wurde." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td> <td class="dataset-details"> ${get_extrafield('metadata_modified').split('.')[0][:-3] if get_extrafield('metadata_modified') else c.pkg.metadata_created}</td> </tr>
+          		<tr class="d2"><td class="dataset-label">Datenverantwortliche Stelle&nbsp;<img alt="Bezeichnung bzw. Name der f&uuml;r den Datensatzes oder Dienst zust&auml;ndigen Organisation bzw. Person, kann in kleinen Organisationen gleichzeitig die ver&ouml;ffentlichende Stelle sein." title="Bezeichnung bzw. Name der f&uuml;r den Datensatzes oder Dienst zust&auml;ndigen Organisation bzw. Person, kann in kleinen Organisationen gleichzeitig die ver&ouml;ffentlichende Stelle sein." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td> <td class="dataset-details">${c.pkg.maintainer}</td> </tr>
+          		<tr class="d2"><td class="dataset-label">Lizenz&nbsp;<img alt="Angabe der Lizenzform f&uuml;r den Datensatz oder den bereitgestellten Dienst." title="Angabe der Lizenzform f&uuml;r den Datensatz oder den bereitgestellten Dienst." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td> <td class="dataset-details">${get_extrafield('license_citation') if get_extrafield('license_citation') else c.pkg.license_id}</td> </tr>
+          		<tr class="d2"><td class="dataset-label">Zeitliche Ausdehnung&nbsp;<img alt="G&uuml;ltigkeit eines Datensatzes oder Dienstes" title="G&uuml;ltigkeit eines Datensatzes oder Dienstes." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td> <td class="dataset-details"> ${get_extrafield('begin_datetime') or ''} ${('bis ' + get_extrafield('end_datetime')) if get_extrafield('end_datetime') else ''} </td> </tr>
+				<tr class="d2"><td class="dataset-label">Bezeichnung der Metadatenstruktur&nbsp;<img alt="Name der Metadatenstruktur." title="Name der Metadatenstruktur." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('schema_name') or 'nicht erfasst'}  </td> </tr>
+				<tr class="d2"><td class="dataset-label">Sprache des Metadatensatzes&nbsp;<img alt="Sprache in welcher der Metadatensatz erstellt wurde." title="Sprache in welcher der Metadatensatz erstellt wurde." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('schema_language') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Character Set Code des Metadatensatzes&nbsp;<img alt="Character Set codes zur Beschreibung des Metadatensatzes nach ISO\IEC 10646-1." title="Character Set codes zur Beschreibung des Metadatensatzes nach ISO\IEC 10646-1t." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('schema_characterset') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Weiterf&uuml;hrende Metadaten&nbsp;<img alt="URL zur weiteren ausf&uuml;hrlicheren Beschreibung der Metadaten." title="URL zur weiteren ausf&uuml;hrlicheren Beschreibung der Metadaten." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('metadata_linkage') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Attributbeschreibung&nbsp;<img alt="Menschenlesbare Beschreibung der Bedeutung der Datenfelder in einem Datensatz." title="Menschenlesbare Beschreibung der Bedeutung der Datenfelder in einem Datensatz." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('attribute_description') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Kontaktseite der datenverantwortlichen Stelle&nbsp;<img alt="URL zur daten- bzw. dienstverantwortlichen Stelle." title="URL zur daten- bzw. dienstverantwortlichen Stelle." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('maintainer_link') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Ver&ouml;ffentlichende Stelle&nbsp;<img alt="Bezeichnung bzw. Name der f&uuml;r den Metadatensatz zust&auml;ndigen Organisation bzw. Person." title="Bezeichnung bzw. Name der f&uuml;r den Datensatz oder Dienst zust&auml;ndigen Organisation bzw. Person." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('publisher') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Geographische Abdeckung/Lage&nbsp;<img alt="Menschenlesbare Beschreibung der r&auml;umlichen Lage eines Datensatzes oder Dienstes." title="Menschenlesbare Beschreibung der r&auml;umlichen Lage eines Datensatzes oder Dienstes." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('geographic_toponym') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Geographische Ausdehnung&nbsp;<img alt="Beschreibung der r&auml;umlichen Ausdehnung eines Datensatzes mit einem umschreibenden Rechteck. Die Angabe erfolgt im Koordinatensystem EPSG:4326 (WGS84) mit einer Mindestgenauigkeit von zwei Dezimalstellen in einer Well Known Text String Repr&auml;sentation. POLYGON (Rechtswert_min Hochwert_min, Rechtswert_max Hochwert_max)." title="Beschreibung der r&auml;umlichen Ausdehnung eines Datensatzes mit einem umschreibenden Rechteck. Die Angabe erfolgt im Koordinatensystem EPSG:4326 (WGS84) mit einer Mindestgenauigkeit von zwei Dezimalstellen in einer Well Known Text String Repr&auml;sentation. POLYGON (Rechtswert_min Hochwert_min, Rechtswert_max Hochwert_max)." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('geographic_toponym') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Aktualisierungszyklus&nbsp;<img alt="Frequenz der Aktualisierung des Datensatzes bzw. Dienstes." title="Frequenz der Aktualisierung des Datensatzes bzw. Dienstes." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('update_frequency') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Datenqualit&auml;t/Herkunft&nbsp;<img alt="Allgemeine Angaben zur Qualit&auml;t und/oder Entstehungsgenese des Datensatzes oder Dienstes." title="Allgemeine Angaben zur Qualit&auml;t und/oder Entstehungsgenese des Datensatzes oder Dienstes." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('lineage_quality') or 'nicht erfasst'}</td> </tr>
+				<tr class="d2"><td class="dataset-label">Titel und Beschreibung Englisch&nbsp;<img alt="Titel des Datensatzes oder Dienstes und kurze inhaltliche Beschreibung des Datensatzes bzw. Dienstes f&uuml;r BenutzerInnen in Englisch." title="Titel des Datensatzes oder Dienstes und kurze inhaltliche Beschreibung des Datensatzes bzw. Dienstes f&uuml;r BenutzerInnen in Englisch." src="http://www.data.gv.at/wp-content/themes/datagvat/images/icon-question-mark.png" /></td><td class="dataset-details">${get_extrafield('en_title_and_description') or 'nicht erfasst'}</td> </tr>
+           	</table>
+		</div><!--  /contentText -->
+	</div><!-- /dataset -->
+</html>
